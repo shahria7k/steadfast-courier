@@ -8,11 +8,13 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         node-version: [18.x, 20.x]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -38,11 +40,13 @@ jobs:
           fail_ci_if_error: false
 
   test-package-managers:
-    name: Test Package Managers
+    name: Test Package Managers (${{ matrix.package-manager }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         package-manager: [npm, yarn, pnpm]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js
