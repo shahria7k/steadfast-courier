@@ -29,9 +29,31 @@ jobs:
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: "20.x"
+                  node-version: "24.x"  # Node 24 includes npm 11.5.1+ required for OIDC
                   registry-url: "https://registry.npmjs.org"
                   # OIDC authentication - no NPM_TOKEN needed when using Trusted Publishers
+            
+            - name: Verify npm version (OIDC requires npm 11.5.1+)
+              run: |
+                  npm_version=$(npm --version)
+                  echo "npm version: $npm_version"
+                  # Check if npm version is 11.5.1 or higher
+                  if ! node -e "const v=process.argv[1];const [m,p]=v.split('.').map(Number);console.log(m>11||(m===11&&p>=5)?'ok':'fail')" "$npm_version" | grep -q ok; then
+                    echo "⚠️  Warning: npm version $npm_version may not fully support OIDC. Consider upgrading."
+                  fi
+            
+            - name: Verify OIDC configuration
+              run: |
+                  echo "Checking OIDC setup..."
+                  echo "Repository: ${{ github.repository }}"
+                  echo "Workflow: ${{ github.workflow }}"
+                  echo "Workflow file: .github/workflows/release.yml"
+                  echo ""
+                  echo "⚠️  Make sure Trusted Publisher is configured on npm:"
+                  echo "   https://www.npmjs.com/package/steadfast-courier/access"
+                  echo "   - Publisher: GitHub Actions"
+                  echo "   - Repository: ${{ github.repository }}"
+                  echo "   - Workflow filename: release.yml"
 
             - name: Install dependencies
               run: npm ci
@@ -106,8 +128,13 @@ jobs:
 
             - name: Publish to npm
               if: steps.check-version.outputs.exists != 'true'
-              run: npm publish --provenance --access public
+              run: |
+                  echo "Publishing with OIDC authentication..."
+                  echo "If this fails, verify Trusted Publisher is configured:"
+                  echo "https://www.npmjs.com/package/steadfast-courier/access"
+                  npm publish --provenance --access public
               # OIDC authentication via Trusted Publishers - no NPM_TOKEN needed
+              # Requires: npm 11.5.1+, Trusted Publisher configured on npm, and id-token: write permission
 
             - name: Create git tag (workflow_dispatch only)
               if: github.event_name == 'workflow_dispatch' && steps.check-version.outputs.exists != 'true'
