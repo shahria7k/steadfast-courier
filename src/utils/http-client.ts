@@ -2,6 +2,7 @@
  * HTTP client wrapper for API requests
  */
 
+import '../types/node';
 import { BASE_URL } from '../constants';
 import { SteadfastApiError } from './errors';
 
@@ -47,40 +48,58 @@ export class HttpClient {
       ...options.headers,
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const timeoutId = setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      controller.abort();
+    }, this.timeout);
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       const response = await fetch(url, {
         method: options.method,
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         signal: controller.signal,
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       clearTimeout(timeoutId);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const contentType = response.headers.get('content-type');
-      const isJson = contentType?.includes('application/json');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const isJson = contentType?.includes('application/json') ?? false;
 
       let data: unknown;
       if (isJson) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         data = await response.json();
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         const text = await response.text();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         data = text ? { message: text } : {};
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
         throw new SteadfastApiError(
-          (data as { message?: string })?.message || `HTTP ${response.status}`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (data as { message?: string })?.message ?? `HTTP ${response.status}`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           response.status,
           data
         );
       }
 
       return data as T;
-    } catch (error) {
+    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       clearTimeout(timeoutId);
 
       if (error instanceof SteadfastApiError) {

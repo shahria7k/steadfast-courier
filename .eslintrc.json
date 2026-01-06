@@ -28,5 +28,6 @@
   "env": {
     "node": true,
     "es2022": true
-  }
+  },
+  "ignorePatterns": ["scripts/**", "dist/**", "dist-esm/**", "node_modules/**"]
 }

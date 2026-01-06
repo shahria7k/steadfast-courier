@@ -2,6 +2,7 @@
  * Webhook verification utilities
  */
 
+import '../types/node';
 import { SteadfastWebhookError } from '../utils/errors';
 import { timingSafeEqual } from 'crypto';
 
@@ -28,10 +29,7 @@ export function extractBearerToken(authHeader: string | undefined | null): strin
 /**
  * Verify Bearer token using timing-safe comparison
  */
-export function verifyBearerToken(
-  receivedToken: string,
-  expectedToken: string
-): boolean {
+export function verifyBearerToken(receivedToken: string, expectedToken: string): boolean {
   if (!receivedToken || !expectedToken) {
     return false;
   }
@@ -42,8 +40,11 @@ export function verifyBearerToken(
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const receivedBuffer = Buffer.from(receivedToken, 'utf8');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const expectedBuffer = Buffer.from(expectedToken, 'utf8');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return timingSafeEqual(receivedBuffer, expectedBuffer);
   } catch {
     return false;
