@@ -1,14 +1,61 @@
 /**
  * Express.js adapter for webhook handling
+ *
+ * This module provides Express.js-specific adapter functions for handling
+ * Steadfast Courier webhooks in Express.js applications.
+ *
+ * @module webhooks/adapters/express
  */
 
 import { Request, Response, NextFunction } from 'express';
 import { SteadfastWebhookHandler, SteadfastWebhookHandlerConfig } from '../handler';
 
 /**
- * Express middleware function for handling Steadfast webhooks
- * @param config - Configuration for the webhook handler
- * @param handlerInstance - Optional existing handler instance (if you want to use callbacks)
+ * Create an Express.js middleware function for handling Steadfast webhooks
+ *
+ * Returns an Express.js middleware function that can be used as a route handler.
+ * The middleware handles authentication, payload parsing, and response formatting.
+ *
+ * @param config - Configuration for the webhook handler (API key, etc.)
+ * @param handlerInstance - Optional existing handler instance with callbacks already set up
+ * @returns Express.js middleware function `(req, res, next) => Promise<void>`
+ *
+ * @example
+ * ```typescript
+ * import express from 'express';
+ * import { createSteadfastExpressWebhookHandler } from 'steadfast-courier/webhooks';
+ *
+ * const app = express();
+ * app.use(express.json());
+ *
+ * // Simple usage without callbacks
+ * const webhookHandler = createSteadfastExpressWebhookHandler({
+ *   apiKey: 'your-api-key',
+ * });
+ *
+ * app.post('/steadfast-webhook', webhookHandler);
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Usage with callbacks
+ * import { SteadfastWebhookHandler, createSteadfastExpressWebhookHandler } from 'steadfast-courier/webhooks';
+ *
+ * const handler = new SteadfastWebhookHandler({ apiKey: 'your-api-key' });
+ * handler.onDeliveryStatus(async (payload) => {
+ *   console.log('Delivery status:', payload.status);
+ * });
+ *
+ * const webhookHandler = createSteadfastExpressWebhookHandler(
+ *   { apiKey: 'your-api-key' },
+ *   handler // Pass handler instance with callbacks
+ * );
+ *
+ * app.post('/steadfast-webhook', webhookHandler);
+ * ```
+ *
+ * @see {@link SteadfastWebhookHandler.express} For using handler instance directly
+ * @see {@link SteadfastWebhookHandlerConfig} For configuration options
  */
 export function createSteadfastExpressWebhookHandler(
   config: SteadfastWebhookHandlerConfig,

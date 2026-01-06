@@ -1,5 +1,10 @@
 /**
  * Webhook payload parsing and validation
+ *
+ * This module provides functions for parsing and validating webhook payloads
+ * received from Steadfast Courier. It ensures data integrity and type safety.
+ *
+ * @module webhooks/parser
  */
 
 import { WebhookPayload, DeliveryStatusWebhook, TrackingUpdateWebhook } from '../types/webhook';
@@ -8,6 +13,35 @@ import { SteadfastValidationError } from '../utils/errors';
 
 /**
  * Parse and validate webhook payload
+ *
+ * Parses and validates a webhook payload from Steadfast Courier. This function:
+ * - Validates the payload structure
+ * - Checks required fields
+ * - Parses based on notification type
+ * - Returns a typed webhook payload
+ *
+ * @param data - The raw webhook payload data (typically parsed JSON)
+ * @returns Parsed and validated webhook payload
+ * @throws {SteadfastValidationError} If the payload is invalid or missing required fields
+ *
+ * @example
+ * ```typescript
+ * import { parseWebhookPayload } from 'steadfast-courier/webhooks';
+ *
+ * try {
+ *   const payload = parseWebhookPayload(request.body);
+ *
+ *   if (payload.notification_type === SteadfastWebhookNotificationType.DELIVERY_STATUS) {
+ *     console.log(`Status: ${payload.status}`);
+ *   }
+ * } catch (error) {
+ *   console.error('Invalid webhook payload:', error);
+ * }
+ * ```
+ *
+ * @see {@link WebhookPayload} For the return type
+ * @see {@link DeliveryStatusWebhook} For delivery status payload structure
+ * @see {@link TrackingUpdateWebhook} For tracking update payload structure
  */
 export function parseWebhookPayload(data: unknown): WebhookPayload {
   if (!data || typeof data !== 'object') {
@@ -53,6 +87,15 @@ export function parseWebhookPayload(data: unknown): WebhookPayload {
 
 /**
  * Parse delivery status webhook payload
+ *
+ * Internal function that parses and validates a delivery status webhook payload.
+ * Validates all required fields and ensures status values are valid enum values.
+ *
+ * @param payload - The raw payload object to parse
+ * @returns Parsed and validated delivery status webhook payload
+ * @throws {SteadfastValidationError} If validation fails
+ *
+ * @internal
  */
 function parseDeliveryStatusWebhook(payload: Record<string, unknown>): DeliveryStatusWebhook {
   if (typeof payload.cod_amount !== 'number') {
@@ -100,6 +143,15 @@ function parseDeliveryStatusWebhook(payload: Record<string, unknown>): DeliveryS
 
 /**
  * Parse tracking update webhook payload
+ *
+ * Internal function that parses and validates a tracking update webhook payload.
+ * Validates all required fields for tracking update webhooks.
+ *
+ * @param payload - The raw payload object to parse
+ * @returns Parsed and validated tracking update webhook payload
+ * @throws {SteadfastValidationError} If validation fails
+ *
+ * @internal
  */
 function parseTrackingUpdateWebhook(payload: Record<string, unknown>): TrackingUpdateWebhook {
   if (!payload.tracking_message || typeof payload.tracking_message !== 'string') {

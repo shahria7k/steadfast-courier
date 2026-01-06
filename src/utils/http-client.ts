@@ -1,26 +1,86 @@
 /**
  * HTTP client wrapper for API requests
+ *
+ * This module provides an HTTP client for making authenticated requests to the
+ * Steadfast Courier API. Handles authentication, timeouts, and error handling.
+ *
+ * @module utils/http-client
  */
 
 import { BASE_URL } from '../constants';
 import { SteadfastApiError } from './errors';
 
+/**
+ * Configuration for HttpClient
+ *
+ * @example
+ * ```typescript
+ * const config: HttpClientConfig = {
+ *   apiKey: 'your-api-key',
+ *   secretKey: 'your-secret-key',
+ *   baseUrl: 'https://portal.packzy.com/api/v1',
+ *   timeout: 30000,
+ * };
+ * ```
+ */
 export interface HttpClientConfig {
+  /** API key for authentication */
   apiKey: string;
+  /** Secret key for authentication */
   secretKey: string;
+  /** Optional base URL (defaults to production API) */
   baseUrl?: string;
+  /** Optional request timeout in milliseconds (default: 30000) */
   timeout?: number;
 }
 
+/**
+ * Request options for HTTP client
+ *
+ * @example
+ * ```typescript
+ * const options: RequestOptions = {
+ *   method: 'POST',
+ *   path: '/create_order',
+ *   body: { invoice: 'INV-123' },
+ * };
+ * ```
+ */
 export interface RequestOptions {
+  /** HTTP method to use */
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  /** API endpoint path (relative to base URL) */
   path: string;
+  /** Optional request body (will be JSON stringified) */
   body?: unknown;
+  /** Optional additional headers */
   headers?: Record<string, string> | undefined;
 }
 
 /**
  * HTTP client for making API requests
+ *
+ * Handles all HTTP communication with the Steadfast Courier API.
+ * Automatically adds authentication headers and handles timeouts.
+ *
+ * @example
+ * ```typescript
+ * import { HttpClient } from './utils/http-client';
+ *
+ * const client = new HttpClient({
+ *   apiKey: 'your-api-key',
+ *   secretKey: 'your-secret-key',
+ * });
+ *
+ * // Make a GET request
+ * const data = await client.get('/get_balance');
+ *
+ * // Make a POST request
+ * const result = await client.post('/create_order', { invoice: 'INV-123' });
+ * ```
+ *
+ * @see {@link HttpClientConfig} For configuration options
+ * @see {@link RequestOptions} For request options
  */
 export class HttpClient {
   private readonly baseUrl: string;
@@ -37,6 +97,24 @@ export class HttpClient {
 
   /**
    * Make an HTTP request
+   *
+   * Generic method for making HTTP requests to the Steadfast Courier API.
+   * Handles authentication, timeouts, error handling, and response parsing.
+   *
+   * @param options - Request options including method, path, body, and headers
+   * @returns Promise resolving to the response data typed as T
+   * @throws {SteadfastApiError} If the request fails or returns an error status
+   *
+   * @example
+   * ```typescript
+   * const response = await httpClient.request<CreateOrderResponse>({
+   *   method: 'POST',
+   *   path: '/create_order',
+   *   body: { invoice: 'INV-123', ... },
+   * });
+   * ```
+   *
+   * @see {@link RequestOptions} For request options structure
    */
   async request<T>(options: RequestOptions): Promise<T> {
     const url = `${this.baseUrl}${options.path}`;
@@ -127,21 +205,64 @@ export class HttpClient {
   }
 
   /**
-   * GET request
+   * Make a GET request
+   *
+   * Convenience method for making GET requests to the API.
+   *
+   * @param path - API endpoint path (relative to base URL)
+   * @param headers - Optional additional headers
+   * @returns Promise resolving to the response data typed as T
+   * @throws {SteadfastApiError} If the request fails
+   *
+   * @example
+   * ```typescript
+   * const balance = await httpClient.get<BalanceResponse>('/get_balance');
+   * const status = await httpClient.get<DeliveryStatusResponse>('/status_by_cid/1424107');
+   * ```
    */
   async get<T>(path: string, headers?: Record<string, string>): Promise<T> {
     return this.request<T>({ method: 'GET', path, headers });
   }
 
   /**
-   * POST request
+   * Make a POST request
+   *
+   * Convenience method for making POST requests to the API.
+   * The body will be automatically JSON stringified.
+   *
+   * @param path - API endpoint path (relative to base URL)
+   * @param body - Optional request body (will be JSON stringified)
+   * @param headers - Optional additional headers
+   * @returns Promise resolving to the response data typed as T
+   * @throws {SteadfastApiError} If the request fails
+   *
+   * @example
+   * ```typescript
+   * const order = await httpClient.post<CreateOrderResponse>('/create_order', {
+   *   invoice: 'INV-123',
+   *   recipient_name: 'John Doe',
+   *   // ... other fields
+   * });
+   * ```
    */
   async post<T>(path: string, body?: unknown, headers?: Record<string, string>): Promise<T> {
     return this.request<T>({ method: 'POST', path, body, headers });
   }
 
   /**
-   * DELETE request
+   * Make a DELETE request
+   *
+   * Convenience method for making DELETE requests to the API.
+   *
+   * @param path - API endpoint path (relative to base URL)
+   * @param headers - Optional additional headers
+   * @returns Promise resolving to the response data typed as T
+   * @throws {SteadfastApiError} If the request fails
+   *
+   * @example
+   * ```typescript
+   * await httpClient.delete('/some-endpoint/123');
+   * ```
    */
   async delete<T>(path: string, headers?: Record<string, string>): Promise<T> {
     return this.request<T>({ method: 'DELETE', path, headers });

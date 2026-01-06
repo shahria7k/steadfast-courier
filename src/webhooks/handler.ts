@@ -1,5 +1,11 @@
 /**
  * Core webhook handler class
+ *
+ * This module contains the main webhook handler class for processing incoming
+ * webhooks from Steadfast Courier. It provides authentication, parsing, and
+ * event emission capabilities.
+ *
+ * @module webhooks/handler
  */
 
 import { EventEmitter } from 'events';
@@ -15,6 +21,22 @@ import type { GenericRequest, GenericResponse } from './adapters/generic';
 
 /**
  * Handler function type for delivery status webhooks
+ *
+ * Callback function that is invoked when a delivery status webhook is received.
+ * Can be either synchronous or asynchronous.
+ *
+ * @param payload - The delivery status webhook payload
+ * @returns Promise that resolves when handling is complete, or void for synchronous handlers
+ *
+ * @example
+ * ```typescript
+ * const handler: SteadfastDeliveryStatusHandler = async (payload) => {
+ *   console.log(`Order ${payload.invoice} status: ${payload.status}`);
+ *   await updateDatabase(payload);
+ * };
+ * ```
+ *
+ * @see {@link DeliveryStatusWebhook} For the payload structure
  */
 export type SteadfastDeliveryStatusHandler = (
   payload: DeliveryStatusWebhook
@@ -22,6 +44,22 @@ export type SteadfastDeliveryStatusHandler = (
 
 /**
  * Handler function type for tracking update webhooks
+ *
+ * Callback function that is invoked when a tracking update webhook is received.
+ * Can be either synchronous or asynchronous.
+ *
+ * @param payload - The tracking update webhook payload
+ * @returns Promise that resolves when handling is complete, or void for synchronous handlers
+ *
+ * @example
+ * ```typescript
+ * const handler: SteadfastTrackingUpdateHandler = async (payload) => {
+ *   console.log(`Tracking update for ${payload.invoice}: ${payload.tracking_message}`);
+ *   await sendNotification(payload);
+ * };
+ * ```
+ *
+ * @see {@link TrackingUpdateWebhook} For the payload structure
  */
 export type SteadfastTrackingUpdateHandler = (
   payload: TrackingUpdateWebhook
@@ -29,16 +67,73 @@ export type SteadfastTrackingUpdateHandler = (
 
 /**
  * Configuration for SteadfastWebhookHandler
+ *
+ * Configuration options for initializing a webhook handler instance.
+ *
+ * @example
+ * ```typescript
+ * const config: SteadfastWebhookHandlerConfig = {
+ *   apiKey: 'your-api-key',
+ *   skipAuth: false, // Set to true only for testing
+ * };
+ * ```
  */
 export interface SteadfastWebhookHandlerConfig {
-  /** API key to verify Bearer token against */
+  /**
+   * API key to verify Bearer token against.
+   * This should match the API key configured in your Steadfast account.
+   *
+   * @example `'your-api-key'`
+   */
   apiKey: string;
-  /** Optional: Whether to skip authentication (not recommended for production) */
+  /**
+   * Optional: Whether to skip authentication verification.
+   * **Not recommended for production use.** Only use for testing/development.
+   *
+   * @default `false`
+   */
   skipAuth?: boolean;
 }
 
 /**
  * Steadfast Courier webhook handler class for processing incoming webhooks
+ *
+ * This class handles incoming webhooks from Steadfast Courier, including:
+ * - Authentication verification (Bearer token)
+ * - Payload parsing and validation
+ * - Handler invocation for specific webhook types
+ * - Event emission for integration with EventEmitter
+ *
+ * @example
+ * ```typescript
+ * import { SteadfastWebhookHandler, SteadfastWebhookEvent } from 'steadfast-courier/webhooks';
+ *
+ * const handler = new SteadfastWebhookHandler({
+ *   apiKey: 'your-api-key',
+ * });
+ *
+ * // Set up callbacks
+ * handler.onDeliveryStatus(async (payload) => {
+ *   console.log(`Order ${payload.invoice} status: ${payload.status}`);
+ * });
+ *
+ * handler.onTrackingUpdate(async (payload) => {
+ *   console.log(`Tracking update: ${payload.tracking_message}`);
+ * });
+ *
+ * // Listen to events
+ * handler.on(SteadfastWebhookEvent.ERROR, (error) => {
+ *   console.error('Webhook error:', error);
+ * });
+ *
+ * // Process webhook
+ * const result = await handler.handle(request.body, request.headers.authorization);
+ * ```
+ *
+ * @extends EventEmitter
+ *
+ * @see {@link SteadfastWebhookHandlerConfig} For configuration options
+ * @see {@link SteadfastWebhookEvent} For available events
  */
 export class SteadfastWebhookHandler extends EventEmitter {
   private readonly apiKey: string;
@@ -46,6 +141,21 @@ export class SteadfastWebhookHandler extends EventEmitter {
   private deliveryStatusHandler?: SteadfastDeliveryStatusHandler;
   private trackingUpdateHandler?: SteadfastTrackingUpdateHandler;
 
+  /**
+   * Creates a new SteadfastWebhookHandler instance
+   *
+   * @param config - Configuration object containing API key and optional settings
+   * @throws {Error} If apiKey is missing and skipAuth is false
+   *
+   * @example
+   * ```typescript
+   * const handler = new SteadfastWebhookHandler({
+   *   apiKey: 'your-api-key',
+   * });
+   * ```
+   *
+   * @see {@link SteadfastWebhookHandlerConfig} For configuration details
+   */
   constructor(config: SteadfastWebhookHandlerConfig) {
     super();
     if (!config.apiKey && !config.skipAuth) {
@@ -57,6 +167,31 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Set handler for delivery status webhooks
+   *
+   * Registers a callback function that will be invoked when a delivery status
+   * webhook is received. The handler will be called after authentication and
+   * payload validation succeed.
+   *
+   * @param handler - Callback function to handle delivery status webhooks
+   *
+   * @example
+   * ```typescript
+   * handler.onDeliveryStatus(async (payload) => {
+   *   console.log(`Order ${payload.invoice} status: ${payload.status}`);
+   *   console.log(`COD Amount: ${payload.cod_amount} BDT`);
+   *
+   *   // Update database
+   *   await updateOrderStatus(payload.consignment_id, payload.status);
+   *
+   *   // Send notification
+   *   if (payload.status === SteadfastWebhookDeliveryStatus.DELIVERED) {
+   *     await sendDeliveryNotification(payload);
+   *   }
+   * });
+   * ```
+   *
+   * @see {@link SteadfastDeliveryStatusHandler} For handler function signature
+   * @see {@link DeliveryStatusWebhook} For payload structure
    */
   onDeliveryStatus(handler: SteadfastDeliveryStatusHandler): void {
     this.deliveryStatusHandler = handler;
@@ -64,6 +199,29 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Set handler for tracking update webhooks
+   *
+   * Registers a callback function that will be invoked when a tracking update
+   * webhook is received. The handler will be called after authentication and
+   * payload validation succeed.
+   *
+   * @param handler - Callback function to handle tracking update webhooks
+   *
+   * @example
+   * ```typescript
+   * handler.onTrackingUpdate(async (payload) => {
+   *   console.log(`Tracking update for ${payload.invoice}:`);
+   *   console.log(payload.tracking_message);
+   *
+   *   // Log tracking update
+   *   await logTrackingUpdate(payload);
+   *
+   *   // Notify recipient
+   *   await sendTrackingNotification(payload);
+   * });
+   * ```
+   *
+   * @see {@link SteadfastTrackingUpdateHandler} For handler function signature
+   * @see {@link TrackingUpdateWebhook} For payload structure
    */
   onTrackingUpdate(handler: SteadfastTrackingUpdateHandler): void {
     this.trackingUpdateHandler = handler;
@@ -71,6 +229,33 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Process a webhook request
+   *
+   * Main method for processing incoming webhook requests. This method:
+   * 1. Verifies authentication (if not skipped)
+   * 2. Parses and validates the webhook payload
+   * 3. Emits events for the webhook type
+   * 4. Invokes registered handlers (if any)
+   * 5. Returns a success or error response
+   *
+   * @param body - The webhook request body (parsed JSON)
+   * @param authHeader - Optional Authorization header value (e.g., "Bearer token")
+   * @returns Promise resolving to a webhook response indicating success or failure
+   *
+   * @example
+   * ```typescript
+   * // In Express.js
+   * app.post('/webhook', async (req, res) => {
+   *   const result = await handler.handle(
+   *     req.body,
+   *     req.headers.authorization
+   *   );
+   *
+   *   res.status(result.status === 'success' ? 200 : 400).json(result);
+   * });
+   * ```
+   *
+   * @see {@link WebhookResponse} For response structure
+   * @see {@link SteadfastWebhookEvent} For emitted events
    */
   async handle(body: unknown, authHeader?: string | null): Promise<WebhookResponse> {
     try {
@@ -112,7 +297,33 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Get Express.js middleware function
-   * @returns Express middleware function
+   *
+   * Returns an Express.js middleware function that can be used directly as a route handler.
+   * This is the recommended way to use the handler with Express.js.
+   *
+   * @returns Express middleware function that handles webhook requests
+   *
+   * @example
+   * ```typescript
+   * import express from 'express';
+   * import { SteadfastWebhookHandler } from 'steadfast-courier/webhooks';
+   *
+   * const app = express();
+   * app.use(express.json());
+   *
+   * const handler = new SteadfastWebhookHandler({
+   *   apiKey: 'your-api-key',
+   * });
+   *
+   * handler.onDeliveryStatus(async (payload) => {
+   *   console.log('Delivery status:', payload.status);
+   * });
+   *
+   * // Use directly as Express middleware
+   * app.post('/steadfast-webhook', handler.express());
+   * ```
+   *
+   * @see {@link createSteadfastExpressWebhookHandler} For alternative adapter function
    */
   express(): (req: Request, res: Response, next: NextFunction) => Promise<void> {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -136,7 +347,32 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Get Fastify route handler function
-   * @returns Fastify route handler function
+   *
+   * Returns a Fastify route handler function that can be used directly in routes.
+   * This is the recommended way to use the handler with Fastify.
+   *
+   * @returns Fastify route handler function that handles webhook requests
+   *
+   * @example
+   * ```typescript
+   * import Fastify from 'fastify';
+   * import { SteadfastWebhookHandler } from 'steadfast-courier/webhooks';
+   *
+   * const fastify = Fastify();
+   *
+   * const handler = new SteadfastWebhookHandler({
+   *   apiKey: 'your-api-key',
+   * });
+   *
+   * handler.onDeliveryStatus(async (payload) => {
+   *   console.log('Delivery status:', payload.status);
+   * });
+   *
+   * // Use directly as Fastify route handler
+   * fastify.post('/steadfast-webhook', handler.fastify());
+   * ```
+   *
+   * @see {@link createSteadfastFastifyWebhookHandler} For alternative adapter function
    */
   fastify(): (req: FastifyRequest, reply: FastifyReply) => Promise<void> {
     return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
@@ -152,7 +388,42 @@ export class SteadfastWebhookHandler extends EventEmitter {
 
   /**
    * Get generic framework-agnostic handler function
-   * @returns Generic handler function
+   *
+   * Returns a generic handler function that works with any framework or HTTP server.
+   * Use this when you need to integrate with a framework that doesn't have a specific adapter.
+   *
+   * @returns Generic handler function that handles webhook requests
+   *
+   * @example
+   * ```typescript
+   * import { SteadfastWebhookHandler } from 'steadfast-courier/webhooks';
+   * import http from 'http';
+   *
+   * const handler = new SteadfastWebhookHandler({
+   *   apiKey: 'your-api-key',
+   * });
+   *
+   * handler.onDeliveryStatus(async (payload) => {
+   *   console.log('Delivery status:', payload.status);
+   * });
+   *
+   * // Use with Node.js http module
+   * const server = http.createServer(async (req, res) => {
+   *   if (req.method === 'POST' && req.url === '/webhook') {
+   *     let body = '';
+   *     req.on('data', chunk => { body += chunk; });
+   *     req.on('end', async () => {
+   *       const parsedBody = JSON.parse(body);
+   *       await handler.generic()(
+   *         { body: parsedBody, headers: req.headers },
+   *         { status: (code) => ({ json: (data) => { res.statusCode = code; res.end(JSON.stringify(data)); } }) }
+   *       );
+   *     });
+   *   }
+   * });
+   * ```
+   *
+   * @see {@link createSteadfastGenericWebhookHandler} For alternative adapter function
    */
   generic(): (req: GenericRequest, res: GenericResponse) => Promise<void> {
     return async (req: GenericRequest, res: GenericResponse): Promise<void> => {

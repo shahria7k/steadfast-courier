@@ -1,5 +1,10 @@
 /**
  * Return service for managing return requests
+ *
+ * This module provides functionality for creating and managing return requests
+ * for delivered orders from Steadfast Courier.
+ *
+ * @module services/return
  */
 
 import { BaseService } from './base.service';
@@ -12,10 +17,67 @@ import {
 
 /**
  * Service for return request operations
+ *
+ * Provides methods to create return requests and retrieve return request information.
+ *
+ * @example
+ * ```typescript
+ * import { SteadfastClient } from 'steadfast-courier';
+ *
+ * const client = new SteadfastClient({
+ *   apiKey: 'your-api-key',
+ *   secretKey: 'your-secret-key',
+ * });
+ *
+ * // Create a return request
+ * const returnRequest = await client.returns.createReturnRequest({
+ *   consignment_id: 1424107,
+ *   reason: 'Customer requested return',
+ * });
+ * ```
+ *
+ * @see {@link CreateReturnRequestRequest} For return request creation structure
+ * @see {@link CreateReturnRequestResponse} For return request response structure
+ * @see {@link ReturnStatus} For possible return status values
  */
 export class ReturnService extends BaseService {
   /**
    * Create a return request
+   *
+   * Creates a new return request for a delivered order. You must provide at least
+   * one identifier: consignment_id, invoice, or tracking_code.
+   *
+   * @param request - Return request details including order identifier and optional reason
+   * @returns Promise resolving to the created return request response
+   * @throws {Error} If no identifier (consignment_id, invoice, or tracking_code) is provided
+   * @throws {SteadfastApiError} If the API request fails or order is not found
+   *
+   * @example
+   * ```typescript
+   * // Using consignment ID
+   * const returnRequest = await client.returns.createReturnRequest({
+   *   consignment_id: 1424107,
+   *   reason: 'Customer requested return',
+   * });
+   *
+   * // Using invoice number
+   * const returnRequest2 = await client.returns.createReturnRequest({
+   *   invoice: 'INV-12345',
+   *   reason: 'Wrong item delivered',
+   * });
+   *
+   * // Using tracking code
+   * const returnRequest3 = await client.returns.createReturnRequest({
+   *   tracking_code: '15BAEB8A',
+   *   reason: 'Damaged during delivery',
+   * });
+   *
+   * console.log(`Return request created: ${returnRequest.id}`);
+   * console.log(`Status: ${returnRequest.status}`);
+   * ```
+   *
+   * @see {@link CreateReturnRequestRequest} For request structure
+   * @see {@link CreateReturnRequestResponse} For response structure
    */
   async createReturnRequest(
     request: CreateReturnRequestRequest
@@ -30,6 +92,25 @@ export class ReturnService extends BaseService {
 
   /**
    * Get a single return request by ID
+   *
+   * Retrieves detailed information about a specific return request using its ID.
+   *
+   * @param id - The return request ID (positive integer)
+   * @returns Promise resolving to the return request response
+   * @throws {Error} If id is not a positive integer
+   * @throws {SteadfastApiError} If the API request fails or return request is not found
+   *
+   * @example
+   * ```typescript
+   * const returnRequest = await client.returns.getReturnRequest(1);
+   *
+   * console.log(`Return Request ID: ${returnRequest.id}`);
+   * console.log(`Status: ${returnRequest.status}`);
+   * console.log(`Reason: ${returnRequest.reason || 'No reason provided'}`);
+   * console.log(`Consignment ID: ${returnRequest.consignment_id}`);
+   * ```
+   *
+   * @see {@link GetReturnRequestResponse} For response structure
    */
   async getReturnRequest(id: number): Promise<GetReturnRequestResponse> {
     if (!Number.isInteger(id) || id <= 0) {
@@ -41,6 +122,29 @@ export class ReturnService extends BaseService {
 
   /**
    * Get all return requests
+   *
+   * Retrieves all return requests associated with your account.
+   * Returns an array of return requests with their current status.
+   *
+   * @returns Promise resolving to an array of return request responses
+   * @throws {SteadfastApiError} If the API request fails
+   *
+   * @example
+   * ```typescript
+   * import { ReturnStatus } from 'steadfast-courier';
+   *
+   * const returnRequests = await client.returns.getReturnRequests();
+   *
+   * // Filter by status
+   * const pending = returnRequests.filter(r => r.status === ReturnStatus.PENDING);
+   * const completed = returnRequests.filter(r => r.status === ReturnStatus.COMPLETED);
+   *
+   * console.log(`Pending returns: ${pending.length}`);
+   * console.log(`Completed returns: ${completed.length}`);
+   * ```
+   *
+   * @see {@link GetReturnRequestsResponse} For response structure
+   * @see {@link ReturnStatus} For possible status values
    */
   async getReturnRequests(): Promise<GetReturnRequestsResponse> {
     return this.httpClient.get<GetReturnRequestsResponse>('/get_return_requests');
