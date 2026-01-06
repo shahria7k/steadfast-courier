@@ -128,6 +128,7 @@ console.log(`Current balance: ${balance.current_balance} BDT`);
 | ------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
 | **Enums**          | `SteadfastWebhookNotificationType` | Webhook notification types (`DELIVERY_STATUS`, `TRACKING_UPDATE`)              |
 |                    | `SteadfastWebhookEvent`            | Webhook event names (`WEBHOOK`, `DELIVERY_STATUS`, `TRACKING_UPDATE`, `ERROR`) |
+|                    | `WebhookDeliveryStatus`            | Delivery status values for webhooks (`PENDING`, `DELIVERED`, `PARTIAL_DELIVERED`, `CANCELLED`, `UNKNOWN`) |
 |                    | `DeliveryStatus`                   | Delivery status values (`PENDING`, `DELIVERED`, `CANCELLED`, etc.)             |
 |                    | `ReturnStatus`                     | Return request status values (`PENDING`, `APPROVED`, `COMPLETED`, etc.)        |
 |                    | `DeliveryType`                     | Delivery type values (`HOME_DELIVERY`, `POINT_DELIVERY`)                       |
@@ -324,6 +325,7 @@ app.post('/steadfast-webhook', webhookHandler.express());
 - **`app.use('/path', handler)`** - Handles ALL HTTP methods (GET, POST, PUT, DELETE, etc.) to that path and sub-paths
 
 For webhooks, you want to:
+
 - ✅ Only accept POST requests (webhooks are POST-only)
 - ✅ Handle a specific endpoint (not all routes)
 - ✅ Reject other HTTP methods (security best practice)
@@ -542,13 +544,30 @@ import type {
   TrackingUpdateWebhook,
   WebhookPayload,
 } from 'steadfast-courier';
+import { WebhookDeliveryStatus } from 'steadfast-courier';
 
 // Type-safe webhook handling
 handler.onDeliveryStatus((payload: DeliveryStatusWebhook) => {
   // payload is fully typed
   console.log(payload.consignment_id);
   console.log(payload.cod_amount);
-  console.log(payload.status);
+  
+  // payload.status is typed as WebhookDeliveryStatus enum
+  console.log(payload.status); // Type: WebhookDeliveryStatus
+  
+  // Use enum for type-safe comparisons
+  if (payload.status === WebhookDeliveryStatus.DELIVERED) {
+    console.log('Order delivered!');
+  } else if (payload.status === WebhookDeliveryStatus.CANCELLED) {
+    console.log('Order cancelled');
+  }
+  
+  // Available enum values:
+  // - WebhookDeliveryStatus.PENDING
+  // - WebhookDeliveryStatus.DELIVERED
+  // - WebhookDeliveryStatus.PARTIAL_DELIVERED
+  // - WebhookDeliveryStatus.CANCELLED
+  // - WebhookDeliveryStatus.UNKNOWN
 });
 ```
 

@@ -41,6 +41,18 @@ export enum DeliveryType {
 }
 
 /**
+ * Delivery status values for webhooks
+ * These are the status values that can appear in delivery status webhooks
+ */
+export enum WebhookDeliveryStatus {
+  PENDING = 'pending',
+  DELIVERED = 'delivered',
+  PARTIAL_DELIVERED = 'partial_delivered',
+  CANCELLED = 'cancelled',
+  UNKNOWN = 'unknown',
+}
+
+/**
  * Steadfast Courier webhook notification types
  */
 export enum SteadfastWebhookNotificationType {
