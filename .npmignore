@@ -1,0 +1,45 @@
+# Source files
+src/
+tests/
+*.test.ts
+*.spec.ts
+
+# Config files
+tsconfig.json
+tsconfig.build.json
+.eslintrc.json
+.prettierrc
+.vscode/
+.idea/
+
+# Build artifacts
+dist-esm/
+*.tsbuildinfo
+
+# Development
+.vitest/
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Documentation source
+docs/
+typedoc.json
+
+# Scripts
+scripts/
+
+# Lock files (keep package.json)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.local
