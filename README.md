@@ -61,6 +61,95 @@ console.log(`Current balance: ${balance.current_balance} BDT`);
 
 ## API Reference
 
+### Complete API Methods Table
+
+| Service | Method | Description | Parameters | Returns |
+|---------|--------|-------------|------------|---------|
+| **Orders** | `createOrder` | Create a single order | `CreateOrderRequest` | `CreateOrderResponse` |
+| | `createBulkOrders` | Create multiple orders (max 500) | `BulkOrderItem[]` | `BulkOrderResponse[]` |
+| **Status** | `getStatusByConsignmentId` | Get status by consignment ID | `consignmentId: number` | `DeliveryStatusResponse` |
+| | `getStatusByInvoice` | Get status by invoice number | `invoice: string` | `DeliveryStatusResponse` |
+| | `getStatusByTrackingCode` | Get status by tracking code | `trackingCode: string` | `DeliveryStatusResponse` |
+| **Balance** | `getBalance` | Get current account balance | - | `BalanceResponse` |
+| **Returns** | `createReturnRequest` | Create a return request | `CreateReturnRequestRequest` | `CreateReturnRequestResponse` |
+| | `getReturnRequest` | Get a single return request | `id: number` | `GetReturnRequestResponse` |
+| | `getReturnRequests` | Get all return requests | - | `GetReturnRequestsResponse[]` |
+| **Payments** | `getPayments` | Get all payments | - | `GetPaymentsResponse` |
+| | `getPayment` | Get payment with consignments | `paymentId: number` | `GetPaymentResponse` |
+| **Police Stations** | `getPoliceStations` | Get all police stations | - | `PoliceStation[]` |
+
+### Webhook Utilities Table
+
+| Utility | Description | Framework | Returns |
+|---------|-------------|-----------|---------|
+| `createSteadfastExpressWebhookHandler` | Express.js middleware for webhooks | Express | `(req, res, next) => Promise<void>` |
+| `createSteadfastFastifyWebhookHandler` | Fastify route handler for webhooks | Fastify | `(req, reply) => Promise<void>` |
+| `createSteadfastGenericWebhookHandler` | Generic handler for any framework | Any | `(req, res) => Promise<void>` |
+| `SteadfastWebhookHandler` | Core webhook handler class | Any | Class instance |
+
+### Webhook Handler Methods
+
+| Method | Description | Parameters | Returns |
+|--------|-------------|------------|---------|
+| `handle` | Process webhook payload | `body: unknown, authHeader?: string` | `Promise<WebhookResponse>` |
+| `onDeliveryStatus` | Set handler for delivery status webhooks | `handler: (payload) => void` | `void` |
+| `onTrackingUpdate` | Set handler for tracking update webhooks | `handler: (payload) => void` | `void` |
+| `on` | Listen to webhook events (EventEmitter) | `event: SteadfastWebhookEvent, listener` | `this` |
+
+### Error Classes Table
+
+| Error Class | Description | Properties |
+|-------------|-------------|------------|
+| `SteadfastError` | Base error class for all Steadfast errors | `message: string, statusCode?: number, code?: string` |
+| `SteadfastApiError` | API request/response errors | `message: string, statusCode: number, response?: unknown` |
+| `SteadfastValidationError` | Input validation errors | `message: string, field?: string` |
+| `SteadfastAuthenticationError` | Authentication errors | `message: string` |
+| `SteadfastWebhookError` | Webhook processing errors | `message: string` |
+
+### Type Definitions & Enums
+
+| Category | Name | Description |
+|----------|------|-------------|
+| **Enums** | `SteadfastWebhookNotificationType` | Webhook notification types (`DELIVERY_STATUS`, `TRACKING_UPDATE`) |
+| | `SteadfastWebhookEvent` | Webhook event names (`WEBHOOK`, `DELIVERY_STATUS`, `TRACKING_UPDATE`, `ERROR`) |
+| | `DeliveryStatus` | Delivery status values (`PENDING`, `DELIVERED`, `CANCELLED`, etc.) |
+| | `ReturnStatus` | Return request status values (`PENDING`, `APPROVED`, `COMPLETED`, etc.) |
+| | `DeliveryType` | Delivery type values (`HOME_DELIVERY`, `POINT_DELIVERY`) |
+| **Request Types** | `CreateOrderRequest` | Order creation request payload |
+| | `CreateReturnRequestRequest` | Return request creation payload |
+| **Response Types** | `CreateOrderResponse` | Order creation response |
+| | `DeliveryStatusResponse` | Delivery status response |
+| | `BalanceResponse` | Balance check response |
+| | `WebhookResponse` | Webhook processing response |
+| **Webhook Types** | `DeliveryStatusWebhook` | Delivery status webhook payload |
+| | `TrackingUpdateWebhook` | Tracking update webhook payload |
+| | `WebhookPayload` | Union type for all webhook payloads |
+
+### Validation Utilities
+
+| Function | Description | Parameters | Throws |
+|----------|-------------|------------|--------|
+| `validateInvoice` | Validate invoice format (alpha-numeric with hyphens/underscores) | `invoice: string` | `SteadfastValidationError` |
+| `validateRecipientName` | Validate recipient name (max 100 chars) | `name: string` | `SteadfastValidationError` |
+| `validateRecipientAddress` | Validate recipient address (max 250 chars) | `address: string` | `SteadfastValidationError` |
+| `validatePhoneNumber` | Validate phone number (11 digits) | `phone: string, fieldName?: string` | `SteadfastValidationError` |
+| `validateCodAmount` | Validate COD amount (>= 0) | `amount: number` | `SteadfastValidationError` |
+| `validateEmail` | Validate email format (optional) | `email: string \| undefined` | `SteadfastValidationError` |
+
+### Webhook Utility Functions
+
+| Function | Description | Parameters | Returns |
+|----------|-------------|------------|---------|
+| `extractBearerToken` | Extract Bearer token from Authorization header | `authHeader: string \| undefined \| null` | `string` |
+| `verifyBearerToken` | Verify Bearer token using timing-safe comparison | `receivedToken: string, expectedToken: string` | `boolean` |
+| `parseWebhookPayload` | Parse and validate webhook payload | `data: unknown` | `WebhookPayload` |
+| `createSuccessResponse` | Create webhook success response | - | `WebhookSuccessResponse` |
+| `createErrorResponse` | Create webhook error response | `message: string` | `WebhookErrorResponse` |
+| `isDeliveryStatusWebhook` | Type guard for delivery status webhooks | `payload: WebhookPayload` | `payload is DeliveryStatusWebhook` |
+| `isTrackingUpdateWebhook` | Type guard for tracking update webhooks | `payload: WebhookPayload` | `payload is TrackingUpdateWebhook` |
+
+### API Reference
+
 ### Orders
 
 #### Create Single Order
