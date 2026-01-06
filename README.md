@@ -32,7 +32,7 @@ If you're using TypeScript and importing from `'steadfast-courier/webhooks'`, yo
 ```json
 {
   "compilerOptions": {
-    "moduleResolution": "node16"  // or "nodenext" or "bundler"
+    "moduleResolution": "node16" // or "nodenext" or "bundler"
   }
 }
 ```
@@ -310,9 +310,39 @@ webhookHandler.onTrackingUpdate(async (payload) => {
   // Handle tracking update
 });
 
-// Use the handler directly as Express middleware
+// Use the handler directly as Express route handler
+// Note: We use app.post() instead of app.use() because:
+// - Webhooks are POST requests only (not GET, PUT, DELETE, etc.)
+// - app.post() handles only POST requests to this specific path
+// - app.use() would handle ALL HTTP methods, which is unnecessary and less secure
 app.post('/steadfast-webhook', webhookHandler.express());
 ```
+
+**Why `app.post()` instead of `app.use()`?**
+
+- **`app.post('/path', handler)`** - Handles only POST requests to that specific path
+- **`app.use('/path', handler)`** - Handles ALL HTTP methods (GET, POST, PUT, DELETE, etc.) to that path and sub-paths
+
+For webhooks, you want to:
+- ✅ Only accept POST requests (webhooks are POST-only)
+- ✅ Handle a specific endpoint (not all routes)
+- ✅ Reject other HTTP methods (security best practice)
+
+If you use `app.use('/steadfast-webhook', ...)`, it would also respond to GET, PUT, DELETE requests, which is unnecessary and potentially a security issue.
+
+**If you really need `app.use()`** (e.g., for a prefix that handles multiple routes), you can:
+
+```typescript
+// This would handle POST /webhooks/steadfast, POST /webhooks/other, etc.
+app.use('/webhooks', (req, res, next) => {
+  if (req.method === 'POST' && req.path === '/steadfast') {
+    return webhookHandler.express()(req, res, next);
+  }
+  next();
+});
+```
+
+But for a single webhook endpoint, `app.post()` is the recommended approach.
 
 **Alternative: Using adapter function**
 
