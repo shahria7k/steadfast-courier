@@ -1,6 +1,6 @@
 {
     "name": "steadfast-courier",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "TypeScript SDK for Steadfast Courier Limited API with webhook support",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
@@ -30,7 +30,9 @@
     },
     "typesVersions": {
         "*": {
-            "webhooks": ["./dist/webhooks/index.d.ts"]
+            "webhooks": [
+                "./dist/webhooks/index.d.ts"
+            ]
         }
     },
     "files": [
