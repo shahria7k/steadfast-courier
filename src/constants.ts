@@ -44,7 +44,7 @@ export enum DeliveryType {
  * Delivery status values for webhooks
  * These are the status values that can appear in delivery status webhooks
  */
-export enum WebhookDeliveryStatus {
+export enum SteadfastWebhookDeliveryStatus {
   PENDING = 'pending',
   DELIVERED = 'delivered',
   PARTIAL_DELIVERED = 'partial_delivered',

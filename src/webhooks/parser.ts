@@ -3,7 +3,7 @@
  */
 
 import { WebhookPayload, DeliveryStatusWebhook, TrackingUpdateWebhook } from '../types/webhook';
-import { SteadfastWebhookNotificationType, WebhookDeliveryStatus } from '../constants';
+import { SteadfastWebhookNotificationType, SteadfastWebhookDeliveryStatus } from '../constants';
 import { SteadfastValidationError } from '../utils/errors';
 
 /**
@@ -67,8 +67,8 @@ function parseDeliveryStatusWebhook(payload: Record<string, unknown>): DeliveryS
     );
   }
 
-  const validStatuses = Object.values(WebhookDeliveryStatus);
-  if (!validStatuses.includes(payload.status as WebhookDeliveryStatus)) {
+  const validStatuses = Object.values(SteadfastWebhookDeliveryStatus);
+  if (!validStatuses.includes(payload.status as SteadfastWebhookDeliveryStatus)) {
     throw new SteadfastValidationError(
       `Invalid delivery_status webhook: status must be one of ${validStatuses.join(', ')}`
     );
@@ -91,7 +91,7 @@ function parseDeliveryStatusWebhook(payload: Record<string, unknown>): DeliveryS
     consignment_id: payload.consignment_id as number,
     invoice: payload.invoice as string,
     cod_amount: payload.cod_amount,
-    status: payload.status as WebhookDeliveryStatus,
+    status: payload.status as SteadfastWebhookDeliveryStatus,
     delivery_charge: payload.delivery_charge,
     tracking_message: payload.tracking_message,
     updated_at: payload.updated_at as string,

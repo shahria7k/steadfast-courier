@@ -124,23 +124,23 @@ console.log(`Current balance: ${balance.current_balance} BDT`);
 
 ### Type Definitions & Enums
 
-| Category           | Name                               | Description                                                                    |
-| ------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
-| **Enums**          | `SteadfastWebhookNotificationType` | Webhook notification types (`DELIVERY_STATUS`, `TRACKING_UPDATE`)              |
-|                    | `SteadfastWebhookEvent`            | Webhook event names (`WEBHOOK`, `DELIVERY_STATUS`, `TRACKING_UPDATE`, `ERROR`) |
-|                    | `WebhookDeliveryStatus`            | Delivery status values for webhooks (`PENDING`, `DELIVERED`, `PARTIAL_DELIVERED`, `CANCELLED`, `UNKNOWN`) |
-|                    | `DeliveryStatus`                   | Delivery status values (`PENDING`, `DELIVERED`, `CANCELLED`, etc.)             |
-|                    | `ReturnStatus`                     | Return request status values (`PENDING`, `APPROVED`, `COMPLETED`, etc.)        |
-|                    | `DeliveryType`                     | Delivery type values (`HOME_DELIVERY`, `POINT_DELIVERY`)                       |
-| **Request Types**  | `CreateOrderRequest`               | Order creation request payload                                                 |
-|                    | `CreateReturnRequestRequest`       | Return request creation payload                                                |
-| **Response Types** | `CreateOrderResponse`              | Order creation response                                                        |
-|                    | `DeliveryStatusResponse`           | Delivery status response                                                       |
-|                    | `BalanceResponse`                  | Balance check response                                                         |
-|                    | `WebhookResponse`                  | Webhook processing response                                                    |
-| **Webhook Types**  | `DeliveryStatusWebhook`            | Delivery status webhook payload                                                |
-|                    | `TrackingUpdateWebhook`            | Tracking update webhook payload                                                |
-|                    | `WebhookPayload`                   | Union type for all webhook payloads                                            |
+| Category           | Name                               | Description                                                                                               |
+| ------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Enums**          | `SteadfastWebhookNotificationType` | Webhook notification types (`DELIVERY_STATUS`, `TRACKING_UPDATE`)                                         |
+|                    | `SteadfastWebhookEvent`            | Webhook event names (`WEBHOOK`, `DELIVERY_STATUS`, `TRACKING_UPDATE`, `ERROR`)                            |
+|                    | `SteadfastWebhookDeliveryStatus`   | Delivery status values for webhooks (`PENDING`, `DELIVERED`, `PARTIAL_DELIVERED`, `CANCELLED`, `UNKNOWN`) |
+|                    | `DeliveryStatus`                   | Delivery status values (`PENDING`, `DELIVERED`, `CANCELLED`, etc.)                                        |
+|                    | `ReturnStatus`                     | Return request status values (`PENDING`, `APPROVED`, `COMPLETED`, etc.)                                   |
+|                    | `DeliveryType`                     | Delivery type values (`HOME_DELIVERY`, `POINT_DELIVERY`)                                                  |
+| **Request Types**  | `CreateOrderRequest`               | Order creation request payload                                                                            |
+|                    | `CreateReturnRequestRequest`       | Return request creation payload                                                                           |
+| **Response Types** | `CreateOrderResponse`              | Order creation response                                                                                   |
+|                    | `DeliveryStatusResponse`           | Delivery status response                                                                                  |
+|                    | `BalanceResponse`                  | Balance check response                                                                                    |
+|                    | `WebhookResponse`                  | Webhook processing response                                                                               |
+| **Webhook Types**  | `DeliveryStatusWebhook`            | Delivery status webhook payload                                                                           |
+|                    | `TrackingUpdateWebhook`            | Tracking update webhook payload                                                                           |
+|                    | `WebhookPayload`                   | Union type for all webhook payloads                                                                       |
 
 ### Validation Utilities
 
@@ -544,30 +544,30 @@ import type {
   TrackingUpdateWebhook,
   WebhookPayload,
 } from 'steadfast-courier';
-import { WebhookDeliveryStatus } from 'steadfast-courier';
+import { SteadfastWebhookDeliveryStatus } from 'steadfast-courier';
 
 // Type-safe webhook handling
 handler.onDeliveryStatus((payload: DeliveryStatusWebhook) => {
   // payload is fully typed
   console.log(payload.consignment_id);
   console.log(payload.cod_amount);
-  
-  // payload.status is typed as WebhookDeliveryStatus enum
-  console.log(payload.status); // Type: WebhookDeliveryStatus
-  
+
+  // payload.status is typed as SteadfastWebhookDeliveryStatus enum
+  console.log(payload.status); // Type: SteadfastWebhookDeliveryStatus
+
   // Use enum for type-safe comparisons
-  if (payload.status === WebhookDeliveryStatus.DELIVERED) {
+  if (payload.status === SteadfastWebhookDeliveryStatus.DELIVERED) {
     console.log('Order delivered!');
-  } else if (payload.status === WebhookDeliveryStatus.CANCELLED) {
+  } else if (payload.status === SteadfastWebhookDeliveryStatus.CANCELLED) {
     console.log('Order cancelled');
   }
-  
+
   // Available enum values:
-  // - WebhookDeliveryStatus.PENDING
-  // - WebhookDeliveryStatus.DELIVERED
-  // - WebhookDeliveryStatus.PARTIAL_DELIVERED
-  // - WebhookDeliveryStatus.CANCELLED
-  // - WebhookDeliveryStatus.UNKNOWN
+  // - SteadfastWebhookDeliveryStatus.PENDING
+  // - SteadfastWebhookDeliveryStatus.DELIVERED
+  // - SteadfastWebhookDeliveryStatus.PARTIAL_DELIVERED
+  // - SteadfastWebhookDeliveryStatus.CANCELLED
+  // - SteadfastWebhookDeliveryStatus.UNKNOWN
 });
 ```
 

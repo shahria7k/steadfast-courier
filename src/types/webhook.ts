@@ -2,7 +2,7 @@
  * Steadfast Courier webhook-related type definitions
  */
 
-import { SteadfastWebhookNotificationType, WebhookDeliveryStatus } from '../constants';
+import { SteadfastWebhookNotificationType, SteadfastWebhookDeliveryStatus } from '../constants';
 
 /**
  * Base Steadfast webhook payload structure
@@ -20,7 +20,7 @@ export interface BaseSteadfastWebhookPayload {
 export interface DeliveryStatusWebhook extends BaseSteadfastWebhookPayload {
   notification_type: SteadfastWebhookNotificationType.DELIVERY_STATUS;
   cod_amount: number;
-  status: WebhookDeliveryStatus;
+  status: SteadfastWebhookDeliveryStatus;
   delivery_charge: number;
   tracking_message: string;
 }
