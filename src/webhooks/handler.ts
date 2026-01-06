@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { WebhookPayload, DeliveryStatusWebhook, TrackingUpdateWebhook } from '../types/webhook';
+import { DeliveryStatusWebhook, TrackingUpdateWebhook } from '../types/webhook';
 import { SteadfastWebhookNotificationType, SteadfastWebhookEvent } from '../constants';
 import { parseWebhookPayload } from './parser';
 import { extractBearerToken, verifyBearerToken } from './verifier';

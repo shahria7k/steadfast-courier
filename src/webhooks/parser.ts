@@ -34,8 +34,10 @@ export function parseWebhookPayload(data: unknown): WebhookPayload {
   }
 
   // Parse based on notification type
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
   if (payload.notification_type === SteadfastWebhookNotificationType.DELIVERY_STATUS) {
     return parseDeliveryStatusWebhook(payload);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
   } else if (payload.notification_type === SteadfastWebhookNotificationType.TRACKING_UPDATE) {
     return parseTrackingUpdateWebhook(payload);
   } else {

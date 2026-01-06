@@ -3,7 +3,6 @@
  */
 
 import { SteadfastWebhookHandler, SteadfastWebhookHandlerConfig } from '../handler';
-import { WebhookResponse } from '../../types/webhook';
 
 /**
  * Generic request interface for framework-agnostic handling
