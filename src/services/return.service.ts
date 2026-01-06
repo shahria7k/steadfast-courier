@@ -22,9 +22,7 @@ export class ReturnService extends BaseService {
   ): Promise<CreateReturnRequestResponse> {
     // Validate that at least one identifier is provided
     if (!request.consignment_id && !request.invoice && !request.tracking_code) {
-      throw new Error(
-        'At least one of consignment_id, invoice, or tracking_code must be provided'
-      );
+      throw new Error('At least one of consignment_id, invoice, or tracking_code must be provided');
     }
 
     return this.httpClient.post<CreateReturnRequestResponse>('/create_return_request', request);

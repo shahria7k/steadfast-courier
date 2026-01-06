@@ -2,7 +2,6 @@
  * HTTP client wrapper for API requests
  */
 
-import '../types/node';
 import { BASE_URL } from '../constants';
 import { SteadfastApiError } from './errors';
 
@@ -57,14 +56,24 @@ export class HttpClient {
     }, this.timeout);
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      const response = await fetch(url, {
+      const fetchOptions: {
+        method: string;
+        headers: Record<string, string>;
+        body?: string;
+        signal: AbortSignal;
+      } = {
         method: options.method,
         headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         signal: controller.signal,
-      });
+      };
+
+      if (options.body) {
+        fetchOptions.body = JSON.stringify(options.body);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const response = await fetch(url, fetchOptions);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       clearTimeout(timeoutId);
@@ -129,5 +138,12 @@ export class HttpClient {
    */
   async post<T>(path: string, body?: unknown, headers?: Record<string, string>): Promise<T> {
     return this.request<T>({ method: 'POST', path, body, headers });
+  }
+
+  /**
+   * DELETE request
+   */
+  async delete<T>(path: string, headers?: Record<string, string>): Promise<T> {
+    return this.request<T>({ method: 'DELETE', path, headers });
   }
 }

@@ -2,7 +2,6 @@
  * Webhook verification utilities
  */
 
-import '../types/node';
 import { SteadfastWebhookError } from '../utils/errors';
 import { timingSafeEqual } from 'crypto';
 

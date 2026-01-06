@@ -44,8 +44,8 @@ export class SteadfastClient {
     const httpConfig: HttpClientConfig = {
       apiKey: config.apiKey,
       secretKey: config.secretKey,
-      baseUrl: config.baseUrl,
-      timeout: config.timeout,
+      ...(config.baseUrl && { baseUrl: config.baseUrl }),
+      ...(config.timeout && { timeout: config.timeout }),
     };
 
     this.httpClient = new HttpClient(httpConfig);

@@ -4,8 +4,9 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "dist-esm", "tests", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "dist-esm", "tests", "**/*.test.ts", "**/*.spec.ts", "src/webhooks/adapters/express.ts", "src/webhooks/adapters/fastify.ts"]
 }
