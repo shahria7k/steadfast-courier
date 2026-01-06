@@ -9,6 +9,9 @@ import { parseWebhookPayload } from './parser';
 import { extractBearerToken, verifyBearerToken } from './verifier';
 import { createSuccessResponse, createErrorResponse } from './responses';
 import { WebhookResponse } from '../types/webhook';
+import type { Request, Response, NextFunction } from 'express';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { GenericRequest, GenericResponse } from './adapters/generic';
 
 /**
  * Handler function type for delivery status webhooks
@@ -105,5 +108,62 @@ export class SteadfastWebhookHandler extends EventEmitter {
       this.emit(SteadfastWebhookEvent.ERROR, error);
       return createErrorResponse(message);
     }
+  }
+
+  /**
+   * Get Express.js middleware function
+   * @returns Express middleware function
+   */
+  express(): (req: Request, res: Response, next: NextFunction) => Promise<void> {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        const authHeader = req.headers.authorization;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+        const result = await this.handle(req.body, authHeader);
+
+        const statusCode = result.status === 'success' ? 200 : 400;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        res.status(statusCode);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        res.json(result);
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        next(error);
+      }
+    };
+  }
+
+  /**
+   * Get Fastify route handler function
+   * @returns Fastify route handler function
+   */
+  fastify(): (req: FastifyRequest, reply: FastifyReply) => Promise<void> {
+    return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const authHeader = req.headers.authorization;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+      const result = await this.handle(req.body, authHeader);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      await reply.status(result.status === 'success' ? 200 : 400).send(result);
+    };
+  }
+
+  /**
+   * Get generic framework-agnostic handler function
+   * @returns Generic handler function
+   */
+  generic(): (req: GenericRequest, res: GenericResponse) => Promise<void> {
+    return async (req: GenericRequest, res: GenericResponse): Promise<void> => {
+      const authHeader = Array.isArray(req.headers.authorization)
+        ? req.headers.authorization[0]
+        : req.headers.authorization;
+
+      const result = await this.handle(req.body, authHeader);
+
+      res.status(result.status === 'success' ? 200 : 400);
+      res.json(result);
+    };
   }
 }

@@ -1,38 +1,138 @@
 name: Release
 
 on:
-  release:
-    types: [created]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g., 1.0.0)'
-        required: true
-        type: string
+    release:
+        types: [created]
+    push:
+        tags:
+            - "v*.*.*" # Triggers on tags like v1.0.0, v1.2.3, etc.
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Version to release (e.g., 1.0.0 or patch/minor/major)"
+                required: true
+                type: string
 
 jobs:
-  publish:
-    name: Publish to npm
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Test
-        run: npm test
-      - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    publish:
+        name: Publish to npm
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            id-token: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20.x"
+                  registry-url: "https://registry.npmjs.org"
+                  # OIDC authentication - no NPM_TOKEN needed when using Trusted Publishers
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Lint
+              run: npm run lint
+
+            - name: Build
+              run: npm run build
+
+            - name: Test
+              run: npm test
+
+            - name: Get version from tag or input
+              id: version
+              run: |
+                  if [ "${{ github.event_name }}" == "push" ] && [ -n "${{ github.ref }}" ]; then
+                    # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+                    VERSION=${GITHUB_REF#refs/tags/v}
+                    echo "version=$VERSION" >> $GITHUB_OUTPUT
+                    echo "Detected version from tag: $VERSION"
+                  elif [ "${{ github.event_name }}" == "release" ]; then
+                    # Get version from release tag
+                    VERSION=${GITHUB_REF#refs/tags/v}
+                    echo "version=$VERSION" >> $GITHUB_OUTPUT
+                    echo "Detected version from release: $VERSION"
+                  elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+                    INPUT_VERSION="${{ github.event.inputs.version }}"
+                    CURRENT_VERSION=$(node -p "require('./package.json').version")
+                    if [ "$INPUT_VERSION" == "patch" ] || [ "$INPUT_VERSION" == "minor" ] || [ "$INPUT_VERSION" == "major" ]; then
+                      # Bump version using npm version (without git operations)
+                      npm version $INPUT_VERSION --no-git-tag-version
+                      VERSION=$(node -p "require('./package.json').version")
+                      echo "version=$VERSION" >> $GITHUB_OUTPUT
+                      echo "Bumped version from $CURRENT_VERSION to $VERSION"
+                    else
+                      # Use provided version - validate format first
+                      if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                        echo "Error: Invalid version format. Use semantic version (e.g., 1.0.0) or patch/minor/major"
+                        exit 1
+                      fi
+                      # Update package.json version
+                      npm version $INPUT_VERSION --no-git-tag-version
+                      VERSION=$INPUT_VERSION
+                      echo "version=$VERSION" >> $GITHUB_OUTPUT
+                      echo "Set version to: $VERSION"
+                    fi
+                  fi
+
+            - name: Verify version matches package.json
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  EXPECTED_VERSION="${{ steps.version.outputs.version }}"
+                  if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
+                    echo "Error: package.json version ($PACKAGE_VERSION) doesn't match expected version ($EXPECTED_VERSION)"
+                    exit 1
+                  fi
+                  echo "✓ Version verified: $PACKAGE_VERSION"
+
+            - name: Check if version already exists
+              id: check-version
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  if npm view steadfast-courier@$PACKAGE_VERSION version > /dev/null 2>&1; then
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                    echo "⚠️  Version $PACKAGE_VERSION already exists on npm"
+                  else
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                    echo "✓ Version $PACKAGE_VERSION is available"
+                  fi
+              continue-on-error: true
+
+            - name: Publish to npm
+              if: steps.check-version.outputs.exists != 'true'
+              run: npm publish --provenance --access public
+              # OIDC authentication via Trusted Publishers - no NPM_TOKEN needed
+
+            - name: Create git tag (workflow_dispatch only)
+              if: github.event_name == 'workflow_dispatch' && steps.check-version.outputs.exists != 'true'
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add package.json package-lock.json
+                  git commit -m "chore: bump version to $PACKAGE_VERSION" || exit 0
+                  git tag -a "v$PACKAGE_VERSION" -m "Release v$PACKAGE_VERSION"
+                  git push origin main
+                  git push origin "v$PACKAGE_VERSION"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Summary
+              if: always()
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  if [ "${{ steps.check-version.outputs.exists }}" == "true" ]; then
+                    echo "## ⚠️  Publishing Skipped" >> $GITHUB_STEP_SUMMARY
+                    echo "Version $PACKAGE_VERSION already exists on npm." >> $GITHUB_STEP_SUMMARY
+                  else
+                    echo "## ✅ Published Successfully" >> $GITHUB_STEP_SUMMARY
+                    echo "Package **steadfast-courier@$PACKAGE_VERSION** has been published to npm." >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "📦 [View on npm](https://www.npmjs.com/package/steadfast-courier)" >> $GITHUB_STEP_SUMMARY
+                  fi

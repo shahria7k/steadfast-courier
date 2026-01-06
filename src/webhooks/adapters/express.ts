@@ -7,11 +7,14 @@ import { SteadfastWebhookHandler, SteadfastWebhookHandlerConfig } from '../handl
 
 /**
  * Express middleware function for handling Steadfast webhooks
+ * @param config - Configuration for the webhook handler
+ * @param handlerInstance - Optional existing handler instance (if you want to use callbacks)
  */
 export function createSteadfastExpressWebhookHandler(
-  config: SteadfastWebhookHandlerConfig
+  config: SteadfastWebhookHandlerConfig,
+  handlerInstance?: SteadfastWebhookHandler
 ): (req: Request, res: Response, next: NextFunction) => Promise<void> {
-  const handler = new SteadfastWebhookHandler(config);
+  const handler = handlerInstance ?? new SteadfastWebhookHandler(config);
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

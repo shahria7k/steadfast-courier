@@ -23,11 +23,14 @@ export interface GenericResponse {
 
 /**
  * Create a generic Steadfast webhook handler function
+ * @param config - Configuration for the webhook handler
+ * @param handlerInstance - Optional existing handler instance (if you want to use callbacks)
  */
 export function createSteadfastGenericWebhookHandler(
-  config: SteadfastWebhookHandlerConfig
+  config: SteadfastWebhookHandlerConfig,
+  handlerInstance?: SteadfastWebhookHandler
 ): (req: GenericRequest, res: GenericResponse) => Promise<void> {
-  const handler = new SteadfastWebhookHandler(config);
+  const handler = handlerInstance ?? new SteadfastWebhookHandler(config);
 
   return async (req: GenericRequest, res: GenericResponse): Promise<void> => {
     const authHeader = Array.isArray(req.headers.authorization)

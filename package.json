@@ -65,12 +65,12 @@
     },
     "repository": {
         "type": "git",
-        "url": ""
+        "url": "https://github.com/shahria7k/steadfast-courier.git"
     },
     "bugs": {
-        "url": ""
+        "url": "https://github.com/shahria7k/steadfast-courier/issues"
     },
-    "homepage": "",
+    "homepage": "https://github.com/shahria7k/steadfast-courier#readme",
     "devDependencies": {
         "@types/express": "^5.0.6",
         "@types/node": "^20.10.0",
