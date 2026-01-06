@@ -28,6 +28,11 @@
         },
         "./package.json": "./package.json"
     },
+    "typesVersions": {
+        "*": {
+            "webhooks": ["./dist/webhooks/index.d.ts"]
+        }
+    },
     "files": [
         "dist",
         "README.md",

@@ -25,6 +25,22 @@ yarn add steadfast-courier
 pnpm add steadfast-courier
 ```
 
+### ⚠️ TypeScript Configuration Required
+
+If you're using TypeScript and importing from `'steadfast-courier/webhooks'`, you **must** update your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "node16"  // or "nodenext" or "bundler"
+  }
+}
+```
+
+**Without this, you'll get:** `Cannot find module 'steadfast-courier/webhooks'`
+
+See [TypeScript Support](#typescript-support) section for more details.
+
 ## Quick Start
 
 ### Basic Usage
