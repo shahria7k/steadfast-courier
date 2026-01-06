@@ -39,8 +39,6 @@ export class StatusService extends BaseService {
       throw new Error('trackingCode must be a non-empty string');
     }
 
-    return this.httpClient.get<DeliveryStatusResponse>(
-      `/status_by_trackingcode/${trackingCode}`
-    );
+    return this.httpClient.get<DeliveryStatusResponse>(`/status_by_trackingcode/${trackingCode}`);
   }
 }

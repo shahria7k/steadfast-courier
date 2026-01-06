@@ -14,9 +14,7 @@ export function validatePhoneNumber(phone: string, fieldName: string = 'phone'):
 
   const phoneRegex = /^\d{11}$/;
   if (!phoneRegex.test(phone)) {
-    throw new SteadfastValidationError(
-      `${fieldName} must be exactly 11 digits, got: ${phone}`
-    );
+    throw new SteadfastValidationError(`${fieldName} must be exactly 11 digits, got: ${phone}`);
   }
 }
 

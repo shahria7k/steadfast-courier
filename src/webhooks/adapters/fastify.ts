@@ -15,7 +15,7 @@ export function createSteadfastFastifyWebhookHandler(
 
   return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const authHeader = req.headers.authorization as string | undefined;
+    const authHeader = req.headers.authorization;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
     const result = await handler.handle(req.body, authHeader);
 

@@ -7,7 +7,9 @@ import { WebhookSuccessResponse, WebhookErrorResponse } from '../types/webhook';
 /**
  * Create a standard success response for webhooks
  */
-export function createSuccessResponse(message: string = 'Webhook received successfully.'): WebhookSuccessResponse {
+export function createSuccessResponse(
+  message: string = 'Webhook received successfully.'
+): WebhookSuccessResponse {
   return {
     status: 'success',
     message,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseWebhookPayload } from '../../../src/webhooks/parser';
-import { WebhookNotificationType } from '../../../src/constants';
+import { SteadfastWebhookNotificationType } from '../../../src/constants';
 import { SteadfastValidationError } from '../../../src/utils/errors';
 
 describe('Webhook Parser', () => {
@@ -18,7 +18,7 @@ describe('Webhook Parser', () => {
       };
 
       const result = parseWebhookPayload(payload);
-      expect(result.notification_type).toBe(WebhookNotificationType.DELIVERY_STATUS);
+      expect(result.notification_type).toBe(SteadfastWebhookNotificationType.DELIVERY_STATUS);
       expect(result.consignment_id).toBe(12345);
       expect(result.invoice).toBe('INV-67890');
     });
@@ -33,7 +33,7 @@ describe('Webhook Parser', () => {
       };
 
       const result = parseWebhookPayload(payload);
-      expect(result.notification_type).toBe(WebhookNotificationType.TRACKING_UPDATE);
+      expect(result.notification_type).toBe(SteadfastWebhookNotificationType.TRACKING_UPDATE);
       expect(result.consignment_id).toBe(12345);
       expect(result.tracking_message).toBe('Package arrived at the sorting center.');
     });

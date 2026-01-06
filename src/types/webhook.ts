@@ -41,18 +41,14 @@ export type WebhookPayload = DeliveryStatusWebhook | TrackingUpdateWebhook;
 /**
  * Type guard to check if payload is a Steadfast delivery status webhook
  */
-export function isDeliveryStatusWebhook(
-  payload: WebhookPayload
-): payload is DeliveryStatusWebhook {
+export function isDeliveryStatusWebhook(payload: WebhookPayload): payload is DeliveryStatusWebhook {
   return payload.notification_type === SteadfastWebhookNotificationType.DELIVERY_STATUS;
 }
 
 /**
  * Type guard to check if payload is a Steadfast tracking update webhook
  */
-export function isTrackingUpdateWebhook(
-  payload: WebhookPayload
-): payload is TrackingUpdateWebhook {
+export function isTrackingUpdateWebhook(payload: WebhookPayload): payload is TrackingUpdateWebhook {
   return payload.notification_type === SteadfastWebhookNotificationType.TRACKING_UPDATE;
 }
 

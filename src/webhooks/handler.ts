@@ -13,12 +13,16 @@ import { WebhookResponse } from '../types/webhook';
 /**
  * Handler function type for delivery status webhooks
  */
-export type SteadfastDeliveryStatusHandler = (payload: DeliveryStatusWebhook) => Promise<void> | void;
+export type SteadfastDeliveryStatusHandler = (
+  payload: DeliveryStatusWebhook
+) => Promise<void> | void;
 
 /**
  * Handler function type for tracking update webhooks
  */
-export type SteadfastTrackingUpdateHandler = (payload: TrackingUpdateWebhook) => Promise<void> | void;
+export type SteadfastTrackingUpdateHandler = (
+  payload: TrackingUpdateWebhook
+) => Promise<void> | void;
 
 /**
  * Configuration for SteadfastWebhookHandler
@@ -65,10 +69,7 @@ export class SteadfastWebhookHandler extends EventEmitter {
   /**
    * Process a webhook request
    */
-  async handle(
-    body: unknown,
-    authHeader?: string | null
-  ): Promise<WebhookResponse> {
+  async handle(body: unknown, authHeader?: string | null): Promise<WebhookResponse> {
     try {
       // Verify authentication
       if (!this.skipAuth) {

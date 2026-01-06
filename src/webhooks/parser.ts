@@ -22,15 +22,21 @@ export function parseWebhookPayload(data: unknown): WebhookPayload {
 
   // Validate common fields
   if (!payload.consignment_id || typeof payload.consignment_id !== 'number') {
-    throw new SteadfastValidationError('Invalid webhook payload: consignment_id is required and must be a number');
+    throw new SteadfastValidationError(
+      'Invalid webhook payload: consignment_id is required and must be a number'
+    );
   }
 
   if (!payload.invoice || typeof payload.invoice !== 'string') {
-    throw new SteadfastValidationError('Invalid webhook payload: invoice is required and must be a string');
+    throw new SteadfastValidationError(
+      'Invalid webhook payload: invoice is required and must be a string'
+    );
   }
 
   if (!payload.updated_at || typeof payload.updated_at !== 'string') {
-    throw new SteadfastValidationError('Invalid webhook payload: updated_at is required and must be a string');
+    throw new SteadfastValidationError(
+      'Invalid webhook payload: updated_at is required and must be a string'
+    );
   }
 
   // Parse based on notification type
@@ -41,9 +47,7 @@ export function parseWebhookPayload(data: unknown): WebhookPayload {
   } else if (payload.notification_type === SteadfastWebhookNotificationType.TRACKING_UPDATE) {
     return parseTrackingUpdateWebhook(payload);
   } else {
-    throw new SteadfastValidationError(
-      `Unknown notification_type: ${payload.notification_type}`
-    );
+    throw new SteadfastValidationError(`Unknown notification_type: ${payload.notification_type}`);
   }
 }
 
@@ -52,11 +56,15 @@ export function parseWebhookPayload(data: unknown): WebhookPayload {
  */
 function parseDeliveryStatusWebhook(payload: Record<string, unknown>): DeliveryStatusWebhook {
   if (typeof payload.cod_amount !== 'number') {
-    throw new SteadfastValidationError('Invalid delivery_status webhook: cod_amount is required and must be a number');
+    throw new SteadfastValidationError(
+      'Invalid delivery_status webhook: cod_amount is required and must be a number'
+    );
   }
 
   if (!payload.status || typeof payload.status !== 'string') {
-    throw new SteadfastValidationError('Invalid delivery_status webhook: status is required and must be a string');
+    throw new SteadfastValidationError(
+      'Invalid delivery_status webhook: status is required and must be a string'
+    );
   }
 
   const validStatuses = ['pending', 'delivered', 'partial_delivered', 'cancelled', 'unknown'];
