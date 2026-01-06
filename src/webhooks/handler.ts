@@ -376,7 +376,7 @@ export class SteadfastWebhookHandler extends EventEmitter {
    */
   fastify(): (req: FastifyRequest, reply: FastifyReply) => Promise<void> {
     return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
       const authHeader = req.headers.authorization;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
       const result = await this.handle(req.body, authHeader);
